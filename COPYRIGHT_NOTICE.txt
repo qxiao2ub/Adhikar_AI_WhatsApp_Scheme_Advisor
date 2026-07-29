@@ -1,3 +1,6 @@
 Copyright (c) 2026 [Replace with legal owner]. All rights reserved.
 
+Author / Project Lead: Praneel Bembey
+Mentor: Dr. Qingyang Xiao
+
 This notice applies only to original source code, original documentation, and original UI assets created for this project. Government scheme information, myScheme materials, BHASHINI services/models, map data, WhatsApp/Meta materials, Apple materials, and third-party libraries remain subject to their own rights and licenses.

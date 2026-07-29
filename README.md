@@ -1,5 +1,8 @@
 # Sahayak AI Scheme Advisor
 
+**Author / Project Lead:** Praneel Bembey  
+**Mentor:** Dr. Qingyang Xiao
+
 A Colab-generated, GitHub-ready prototype for multilingual government-scheme discovery through a Streamlit web app, shareable WhatsApp link, optional WhatsApp Cloud API webhook, and a mobile API scaffold for a future iOS client.
 
 ## What the prototype does
@@ -49,7 +52,8 @@ The generated Colab notebook includes a cell that launches Streamlit through the
 3. Select `streamlit_app.py` as the entry point.
 4. Add secrets in Streamlit settings instead of committing tokens.
 5. Set `APP_PUBLIC_URL` to the deployed Streamlit URL.
-6. Reboot the app after changing dependencies or secrets.
+6. Optionally set `APP_AUTHOR` and `APP_MENTOR`; the repository defaults are `Praneel Bembey` and `Dr. Qingyang Xiao`.
+7. Reboot the app after changing dependencies or secrets.
 
 Streamlit Community Cloud reads the GitHub repository as the source of the deployed app. Keep `requirements.txt` in the repository root.
 
@@ -86,6 +90,6 @@ The demo can use browser/WAV speech recognition and an optional third-party tran
 
 ## GitHub and copyright
 
-Replace placeholder ownership information before publication. Do not claim ownership of government scheme descriptions, logos, myScheme content, BHASHINI models, third-party libraries, or map data. Keep a dependency/license inventory and preserve Git history showing authorship.
+The prototype UI and documentation identify Praneel Bembey as Author / Project Lead and Dr. Qingyang Xiao as Mentor. Replace the copyright owner placeholder with the correct legal claimant before publication. Do not claim ownership of government scheme descriptions, logos, myScheme content, BHASHINI models, third-party libraries, or map data. Keep a dependency/license inventory and preserve Git history showing authorship.
 
 See `COPYRIGHT_CHECKLIST.md`. This repository contains general information, not legal advice.

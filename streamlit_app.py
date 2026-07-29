@@ -18,7 +18,8 @@ from gtts import gTTS
 from core_engine import UserProfile, load_default_engine, redact_sensitive_text
 
 PROJECT_DIR = Path(__file__).resolve().parent
-AUTHOR_NAME = os.getenv("APP_AUTHOR", "Praneel")
+AUTHOR_NAME = os.getenv("APP_AUTHOR", "Praneel Bembey")
+MENTOR_NAME = os.getenv("APP_MENTOR", "Dr. Qingyang Xiao")
 APP_NAME = os.getenv("APP_NAME", "Sahayak AI Scheme Advisor")
 APP_PUBLIC_URL = os.getenv("APP_PUBLIC_URL", "https://your-app-name.streamlit.app")
 
@@ -104,6 +105,9 @@ st.markdown("""
 .hero {padding: 1.2rem 1.4rem; border-radius: 18px; background: linear-gradient(120deg,#ffefe0,#eef8ff); border:1px solid #e8e8e8;}
 .scheme-card {padding: 1rem 1.1rem; border:1px solid #dedede; border-radius:16px; margin-bottom:1rem; background:white;}
 .small-note {font-size:.86rem; color:#555;}
+.credit-line {margin:.55rem 0 0; font-size:1rem; color:#263746; line-height:1.6;}
+.credit-strip {padding:.65rem .85rem; margin:0 0 1rem; border-radius:12px; background:#f7f4df; border:1px solid #ebe4b8; color:#263746;}
+.team-card {padding:1rem 1.1rem; border:1px solid #dedede; border-radius:16px; background:white; margin-bottom:1rem;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -112,6 +116,15 @@ def get_engine():
     return load_default_engine(PROJECT_DIR)
 
 engine = get_engine()
+
+
+def render_project_credit() -> None:
+    """Show consistent author and mentor attribution inside each main tab."""
+    st.markdown(
+        f"<div class='credit-strip'><strong>Author / Project Lead:</strong> {AUTHOR_NAME}"
+        f" &nbsp; | &nbsp; <strong>Mentor:</strong> {MENTOR_NAME}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def local_ui(code: str, key: str) -> str:
@@ -211,16 +224,30 @@ with st.sidebar:
     st.title("🇮🇳 Sahayak AI")
     st.caption("Multilingual government-scheme discovery prototype")
     st.markdown(f"**Author / project lead:** {AUTHOR_NAME}")
+    st.markdown(f"**Mentor:** {MENTOR_NAME}")
     st.markdown("**Data policy:** session processing; no intentional raw-audio or precise-location retention.")
     st.warning("Never enter Aadhaar numbers, bank passwords, OTPs, or full medical records.")
     share_url = f"https://wa.me/?text={quote_plus('Try the Sahayak AI Scheme Advisor: ' + APP_PUBLIC_URL)}"
     st.link_button("Share app link on WhatsApp", share_url, use_container_width=True)
 
-st.markdown(f"<div class='hero'><h1>{APP_NAME}</h1><p>Voice + text scheme discovery in Indian languages, with transparent pre-screening and official verification.</p></div>", unsafe_allow_html=True)
+st.markdown(
+    f"<div class='hero'><h1>{APP_NAME}</h1>"
+    "<p>Voice + text scheme discovery in Indian languages, with transparent pre-screening and official verification.</p>"
+    f"<p class='credit-line'><strong>Author / Project Lead:</strong> {AUTHOR_NAME}<br>"
+    f"<strong>Mentor:</strong> {MENTOR_NAME}</p></div>",
+    unsafe_allow_html=True,
+)
 
-tab_advisor, tab_nearby, tab_ai, tab_deploy = st.tabs(["💬 Scheme advisor", "📍 Nearby services", "🧠 How the AI works", "🚀 WhatsApp & deployment"])
+tab_advisor, tab_nearby, tab_ai, tab_deploy, tab_team = st.tabs([
+    "💬 Scheme advisor",
+    "📍 Nearby services",
+    "🧠 How the AI works",
+    "🚀 WhatsApp & deployment",
+    "👥 Project team",
+])
 
 with tab_advisor:
+    render_project_credit()
     language_name = st.selectbox("Preferred language", list(LANGUAGES.keys()))
     lang_code = LANGUAGES[language_name]["code"]
     locale = LANGUAGES[language_name]["locale"]
@@ -336,6 +363,7 @@ with tab_advisor:
                     st.audio(audio, format="audio/mp3")
 
 with tab_nearby:
+    render_project_credit()
     st.subheader("Find nearby government and community service locations")
     st.caption("Browser location is used only in the current session. You can use a district, city, or PIN code instead.")
     components.html("""
@@ -396,6 +424,7 @@ with tab_nearby:
         c2.link_button("Search nearby government hospitals", health_maps, use_container_width=True)
 
 with tab_ai:
+    render_project_credit()
     st.subheader("Responsible AI architecture")
     st.markdown("""
 1. **Voice and language layer (deep learning/NLP):** speech-to-text, language detection, translation, and text-to-speech use pretrained models or approved language APIs. Clustering is not translation.
@@ -408,6 +437,7 @@ with tab_ai:
     st.error("Do not train on raw voice, Aadhaar, OTPs, precise location history, caste, religion, health records, or WhatsApp identifiers without a lawful purpose, explicit notice, strong security, and an approved retention policy.")
 
 with tab_deploy:
+    render_project_credit()
     st.subheader("Phase 1: link sharing on WhatsApp")
     st.write("Deploy this repository on Streamlit Community Cloud, set APP_PUBLIC_URL in secrets, and share the generated link through WhatsApp.")
     st.subheader("Phase 2: direct WhatsApp chatbot")
@@ -416,3 +446,27 @@ with tab_deploy:
     st.subheader("Phase 3: iOS")
     st.write("Use the included mobile_api.py as the backend contract for a native SwiftUI client. Add a privacy policy, consent, deletion workflow, accessibility testing, and App Store metadata before review.")
     st.info("The notebook also generates README.md, PRIVACY.md, COPYRIGHT_CHECKLIST.md, tests, and a GitHub-ready ZIP.")
+
+with tab_team:
+    render_project_credit()
+    st.subheader("Project team and attribution")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(
+            f"<div class='team-card'><h3>Author / Project Lead</h3>"
+            f"<p><strong>{AUTHOR_NAME}</strong></p>"
+            "<p>Leads the product concept, application design, prototype development, testing, documentation, and deployment preparation.</p></div>",
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            f"<div class='team-card'><h3>Mentor</h3>"
+            f"<p><strong>{MENTOR_NAME}</strong></p>"
+            "<p>Provides technical mentorship, responsible-AI guidance, software-engineering review, and project-development support.</p></div>",
+            unsafe_allow_html=True,
+        )
+    st.info(
+        "The names above identify the student author/project lead and mentor for this prototype. "
+        "Government scheme descriptions, myScheme materials, third-party services, and open-source libraries remain subject to their respective owners and licenses."
+    )
+

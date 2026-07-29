@@ -20,5 +20,8 @@
     "tests/conftest.py",
     "tests/test_core.py",
     "whatsapp_webhook.py"
-  ]
+  ],
+  "author_project_lead": "Praneel Bembey",
+  "mentor": "Dr. Qingyang Xiao",
+  "updated": "2026-07-28"
 }
