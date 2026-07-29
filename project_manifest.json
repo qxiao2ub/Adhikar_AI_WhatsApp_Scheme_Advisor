@@ -1,0 +1,24 @@
+{
+  "project": "Sahayak AI Scheme Advisor",
+  "generated": "2026-07-13",
+  "files": [
+    ".env.example",
+    ".gitignore",
+    ".streamlit/config.toml",
+    "ARCHITECTURE.md",
+    "COPYRIGHT_CHECKLIST.md",
+    "COPYRIGHT_NOTICE.txt",
+    "PRIVACY.md",
+    "README.md",
+    "bandit_state.json",
+    "core_engine.py",
+    "mobile_api.py",
+    "project_manifest.json",
+    "requirements.txt",
+    "sample_schemes.csv",
+    "streamlit_app.py",
+    "tests/conftest.py",
+    "tests/test_core.py",
+    "whatsapp_webhook.py"
+  ]
+}
