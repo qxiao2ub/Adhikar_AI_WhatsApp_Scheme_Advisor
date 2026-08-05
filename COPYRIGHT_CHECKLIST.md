@@ -17,8 +17,8 @@ This is a project-management checklist, not legal advice.
 ## Suggested source header
 
 ```text
-Copyright (c) 2026. All rights reserved.
-Sahayak AI Scheme Advisor — multilingual government-scheme discovery software.
+Copyright (c) 2026 [Owner Name]. All rights reserved.
+Adhikar AI Scheme Advisor — multilingual government-scheme discovery software.
 Third-party libraries and government information remain the property of their respective owners.
 ```
 

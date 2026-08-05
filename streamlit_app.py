@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import base64
 import io
 import json
 import os
 import tempfile
 from pathlib import Path
+from html import escape
 from urllib.parse import quote_plus
 
 import pandas as pd
@@ -20,8 +22,9 @@ from core_engine import UserProfile, load_default_engine, redact_sensitive_text
 PROJECT_DIR = Path(__file__).resolve().parent
 AUTHOR_NAME = os.getenv("APP_AUTHOR", "Praneel Bembey")
 MENTOR_NAME = os.getenv("APP_MENTOR", "Dr. Qingyang Xiao")
-APP_NAME = os.getenv("APP_NAME", "Sahayak AI Scheme Advisor")
-APP_PUBLIC_URL = os.getenv("APP_PUBLIC_URL", "https://your-app-name.streamlit.app")
+APP_NAME = os.getenv("APP_NAME", "Adhikar AI Scheme Advisor")
+APP_PUBLIC_URL = os.getenv("APP_PUBLIC_URL", "https://ai-whatsapp-scheme-advisor.streamlit.app/")
+HERO_PATH = PROJECT_DIR / "assets" / "adhikar-hero.jpg"
 
 LANGUAGES = {
     "English": {"code": "en", "locale": "en-IN"},
@@ -98,18 +101,98 @@ KEYWORD_TRANSLATIONS = {
     "आरोग्य": "healthcare", "उपचार": "treatment", "शिष्यवृत्ती": "scholarship", "निवृत्तीवेतन": "pension",
 }
 
-st.set_page_config(page_title=APP_NAME, page_icon="🇮🇳", layout="wide")
+st.set_page_config(page_title=APP_NAME, page_icon="🇮🇳", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
 <style>
-.main {background: linear-gradient(180deg, #fffdf6 0%, #f6fbff 100%);} 
-.hero {padding: 1.2rem 1.4rem; border-radius: 18px; background: linear-gradient(120deg,#ffefe0,#eef8ff); border:1px solid #e8e8e8;}
-.scheme-card {padding: 1rem 1.1rem; border:1px solid #dedede; border-radius:16px; margin-bottom:1rem; background:white;}
-.small-note {font-size:.86rem; color:#555;}
-.credit-line {margin:.55rem 0 0; font-size:1rem; color:#263746; line-height:1.6;}
-.credit-strip {padding:.65rem .85rem; margin:0 0 1rem; border-radius:12px; background:#f7f4df; border:1px solid #ebe4b8; color:#263746;}
-.team-card {padding:1rem 1.1rem; border:1px solid #dedede; border-radius:16px; background:white; margin-bottom:1rem;}
+:root {
+  --adhikar-cream: #FBF4DF;
+  --adhikar-paper: #FFFDF7;
+  --adhikar-indigo: #20305F;
+  --adhikar-indigo-soft: #2B3D73;
+  --adhikar-saffron: #E98A2B;
+  --adhikar-green: #2F855A;
+  --adhikar-border: #E4D9BD;
+  --adhikar-muted: #5F6673;
+}
+html, body, [class*="css"] {font-family: "Noto Sans", "Segoe UI", Arial, sans-serif;}
+.stApp {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(233,138,43,.12), transparent 24rem),
+    radial-gradient(circle at 96% 8%, rgba(47,133,90,.10), transparent 22rem),
+    var(--adhikar-cream);
+  color: var(--adhikar-indigo);
+}
+[data-testid="stHeader"] {background: rgba(251,244,223,.92); border-bottom: 1px solid rgba(32,48,95,.08);}
+.block-container {max-width: 1180px; padding-top: 1.25rem; padding-bottom: 3rem;}
+section[data-testid="stSidebar"] {
+  background: var(--adhikar-indigo);
+  border-right: 4px solid var(--adhikar-saffron);
+}
+section[data-testid="stSidebar"] * {color: #FFF9EC;}
+section[data-testid="stSidebar"] a {color: #FFF9EC !important;}
+section[data-testid="stSidebar"] [data-testid="stAlert"] {background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);}
+section[data-testid="stSidebar"] [data-testid="stLinkButton"] a {
+  background: var(--adhikar-saffron); color: #2C251A !important; border: none; font-weight: 800;
+}
+.adhikar-sidebar-brand {text-align:center; padding:.2rem .25rem .8rem;}
+.adhikar-sidebar-logo {
+  width:64px; height:64px; margin:0 auto .65rem; border-radius:50%; background:var(--adhikar-saffron);
+  color:#2C251A; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900;
+  box-shadow:0 0 0 5px rgba(233,138,43,.18);
+}
+.adhikar-sidebar-brand h2 {font-family: Georgia, serif; font-size:1.55rem; margin:.2rem 0; color:white;}
+.adhikar-sidebar-brand p {font-size:.82rem; opacity:.78; margin:0;}
+.adhikar-hero {
+  overflow:hidden; border-radius:28px; border:2px solid rgba(233,138,43,.42); background:var(--adhikar-paper);
+  box-shadow:0 18px 45px rgba(32,48,95,.10); margin-bottom:1.2rem;
+}
+.adhikar-hero-image {height:330px; background-size:cover; background-position:center 45%; position:relative;}
+.adhikar-hero-image:after {
+  content:""; position:absolute; inset:auto 0 0 0; height:42%;
+  background:linear-gradient(180deg,transparent,rgba(18,29,63,.55));
+}
+.tiranga-rule {height:6px; background:linear-gradient(90deg,var(--adhikar-saffron) 0 33.33%,#fff 33.33% 66.66%,var(--adhikar-green) 66.66% 100%);}
+.adhikar-hero-copy {padding:2rem 2.2rem 2.25rem; position:relative;}
+.adhikar-badge {display:inline-block; padding:.45rem .8rem; border-radius:999px; background:#F7D6A9; color:#4C3016; font-weight:800; font-size:.86rem;}
+.adhikar-hero h1 {font-family:Georgia,"Noto Serif",serif; font-size:clamp(2.4rem,5vw,4.25rem); line-height:1.02; margin:.85rem 0 .7rem; color:var(--adhikar-indigo);}
+.adhikar-hero .tagline {font-size:1.2rem; line-height:1.65; max-width:850px; color:#4D5668;}
+.credit-line {margin:.9rem 0 0; font-size:1rem; color:#273451; line-height:1.7;}
+.vision-grid {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1.1rem 0 1.6rem;}
+.vision-card {background:rgba(255,253,247,.94); border:1px solid var(--adhikar-border); border-radius:20px; padding:1.15rem; box-shadow:0 8px 20px rgba(32,48,95,.05);}
+.vision-icon {width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F5C98F;color:#2C251A;font-weight:900;font-size:1.2rem;}
+.vision-card h3 {font-family:Georgia,serif;margin:.75rem 0 .3rem;color:var(--adhikar-indigo);font-size:1.25rem;}
+.vision-card p {margin:0;color:var(--adhikar-muted);font-size:.92rem;line-height:1.55;}
+.credit-strip {padding:.72rem 1rem; margin:0 0 1rem; border-radius:14px; background:#FFF8E8; border:1px solid #EAD7A9; color:#263746;}
+.team-card {padding:1.1rem 1.2rem; border:1px solid var(--adhikar-border); border-radius:18px; background:var(--adhikar-paper); margin-bottom:1rem; box-shadow:0 8px 20px rgba(32,48,95,.05);}
+[data-baseweb="tab-list"] {gap:.4rem; background:rgba(255,253,247,.72); border-radius:18px; padding:.35rem; border:1px solid var(--adhikar-border);}
+[data-baseweb="tab"] {border-radius:13px; padding:.6rem .85rem;}
+[aria-selected="true"][data-baseweb="tab"] {background:var(--adhikar-indigo); color:white;}
+[data-testid="stForm"] {background:rgba(255,253,247,.9); border:1px solid var(--adhikar-border); border-radius:22px; padding:1.15rem;}
+[data-testid="stVerticalBlockBorderWrapper"] {background:rgba(255,253,247,.94); border-color:var(--adhikar-border) !important; border-radius:20px; box-shadow:0 9px 24px rgba(32,48,95,.05);}
+.stButton>button[kind="primary"], .stFormSubmitButton>button {background:var(--adhikar-indigo); border:none; border-radius:999px; font-weight:800;}
+.stButton>button[kind="primary"]:hover, .stFormSubmitButton>button:hover {background:var(--adhikar-indigo-soft);}
+.stLinkButton>a {border-radius:999px; font-weight:700;}
+.adhikar-footer {margin-top:2.2rem; padding:1.5rem 1.7rem; border-radius:22px; background:var(--adhikar-indigo); color:#FFF9EC; position:relative; overflow:hidden;}
+.adhikar-footer:before {content:""; position:absolute; inset:0; opacity:.08; background-image:radial-gradient(#F5B45C 1.1px,transparent 1.2px); background-size:24px 24px;}
+.adhikar-footer-content {position:relative;}
+.adhikar-footer a {color:#FFD79B !important; font-weight:800;}
+@media (max-width: 760px) {
+  .adhikar-hero-image {height:220px;}
+  .adhikar-hero-copy {padding:1.35rem;}
+  .vision-grid {grid-template-columns:1fr;}
+  .block-container {padding-left:.75rem; padding-right:.75rem;}
+}
 </style>
 """, unsafe_allow_html=True)
+
+def image_data_uri(path: Path) -> str:
+    """Return a local image as a data URI so the Lovable hero works on Streamlit Cloud."""
+    try:
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:image/jpeg;base64,{encoded}"
+    except Exception:
+        return ""
+
 
 @st.cache_resource
 def get_engine():
@@ -121,8 +204,8 @@ engine = get_engine()
 def render_project_credit() -> None:
     """Show consistent author and mentor attribution inside each main tab."""
     st.markdown(
-        f"<div class='credit-strip'><strong>Author / Project Lead:</strong> {AUTHOR_NAME}"
-        f" &nbsp; | &nbsp; <strong>Mentor:</strong> {MENTOR_NAME}</div>",
+        f"<div class='credit-strip'><strong>Author / Project Lead:</strong> {escape(AUTHOR_NAME)}"
+        f" &nbsp; | &nbsp; <strong>Mentor:</strong> {escape(MENTOR_NAME)}</div>",
         unsafe_allow_html=True,
     )
 
@@ -187,7 +270,7 @@ def synthesize(text: str, lang_code: str) -> bytes | None:
 
 def geocode_place(place: str):
     try:
-        geo = Nominatim(user_agent="sahayak-ai-scheme-advisor-prototype")
+        geo = Nominatim(user_agent="adhikar-ai-scheme-advisor-prototype")
         loc = geo.geocode(place, country_codes="in", timeout=10)
         if loc:
             return float(loc.latitude), float(loc.longitude), loc.address
@@ -221,27 +304,52 @@ def nearby_services(lat: float, lon: float, radius_m: int = 12000):
 
 
 with st.sidebar:
-    st.title("🇮🇳 Sahayak AI")
-    st.caption("Multilingual government-scheme discovery prototype")
-    st.markdown(f"**Author / project lead:** {AUTHOR_NAME}")
-    st.markdown(f"**Mentor:** {MENTOR_NAME}")
+    st.markdown(
+        "<div class='adhikar-sidebar-brand'>"
+        "<div class='adhikar-sidebar-logo'>A</div>"
+        "<h2>Adhikar AI</h2>"
+        "<p>Multilingual government-scheme discovery</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(f"**Author / Project Lead:** {escape(AUTHOR_NAME)}")
+    st.markdown(f"**Mentor:** {escape(MENTOR_NAME)}")
     st.markdown("**Data policy:** session processing; no intentional raw-audio or precise-location retention.")
     st.warning("Never enter Aadhaar numbers, bank passwords, OTPs, or full medical records.")
-    share_url = f"https://wa.me/?text={quote_plus('Try the Sahayak AI Scheme Advisor: ' + APP_PUBLIC_URL)}"
+    share_url = f"https://wa.me/?text={quote_plus('Try the Adhikar AI Scheme Advisor: ' + APP_PUBLIC_URL)}"
     st.link_button("Share app link on WhatsApp", share_url, use_container_width=True)
+    st.link_button("Open official myScheme", "https://www.myscheme.gov.in/", use_container_width=True)
+
+hero_uri = image_data_uri(HERO_PATH)
+hero_style = f"background-image:url('{hero_uri}')" if hero_uri else "background:linear-gradient(135deg,#F7D6A9,#D7E8D6)"
+st.markdown(
+    f"<section class='adhikar-hero'>"
+    f"<div class='tiranga-rule'></div>"
+    f"<div class='adhikar-hero-image' style=\"{hero_style}\"></div>"
+    f"<div class='adhikar-hero-copy'>"
+    f"<span class='adhikar-badge'>13 Indian languages · voice and text supported</span>"
+    f"<h1>{escape(APP_NAME)}</h1>"
+    "<p class='tagline'><strong>Know your rights. Discover the schemes meant for you.</strong> "
+    "Describe your needs in your preferred language and receive transparent potential matches, document guidance, official verification links, and nearby-service support.</p>"
+    f"<p class='credit-line'><strong>Author / Project Lead:</strong> {escape(AUTHOR_NAME)}<br>"
+    f"<strong>Mentor:</strong> {escape(MENTOR_NAME)}</p>"
+    f"</div><div class='tiranga-rule'></div></section>",
+    unsafe_allow_html=True,
+)
 
 st.markdown(
-    f"<div class='hero'><h1>{APP_NAME}</h1>"
-    "<p>Voice + text scheme discovery in Indian languages, with transparent pre-screening and official verification.</p>"
-    f"<p class='credit-line'><strong>Author / Project Lead:</strong> {AUTHOR_NAME}<br>"
-    f"<strong>Mentor:</strong> {MENTOR_NAME}</p></div>",
+    "<div class='vision-grid'>"
+    "<div class='vision-card'><div class='vision-icon'>भ</div><h3>Speak your language</h3><p>Use text or a short voice message in major Indian languages. The language layer helps normalize the request for matching.</p></div>"
+    "<div class='vision-card'><div class='vision-icon'>✓</div><h3>Transparent pre-screening</h3><p>See why a scheme appeared, what still needs confirmation, and where to verify the official rules.</p></div>"
+    "<div class='vision-card'><div class='vision-icon'>⌖</div><h3>Documents and nearby help</h3><p>Review commonly requested documents and search for government, health, and community service locations.</p></div>"
+    "</div>",
     unsafe_allow_html=True,
 )
 
 tab_advisor, tab_nearby, tab_ai, tab_deploy, tab_team = st.tabs([
-    "💬 Scheme advisor",
+    "💬 Adhikar advisor",
     "📍 Nearby services",
-    "🧠 How the AI works",
+    "🧠 Responsible AI",
     "🚀 WhatsApp & deployment",
     "👥 Project team",
 ])
@@ -445,7 +553,7 @@ with tab_deploy:
     st.code("uvicorn whatsapp_webhook:app --host 0.0.0.0 --port 8080")
     st.subheader("Phase 3: iOS")
     st.write("Use the included mobile_api.py as the backend contract for a native SwiftUI client. Add a privacy policy, consent, deletion workflow, accessibility testing, and App Store metadata before review.")
-    st.info("The notebook also generates README.md, PRIVACY.md, COPYRIGHT_CHECKLIST.md, tests, and a GitHub-ready ZIP.")
+    st.info("This repository includes README.md, PRIVACY.md, COPYRIGHT_CHECKLIST.md, tests, and Streamlit Cloud deployment files.")
 
 with tab_team:
     render_project_credit()
@@ -454,14 +562,14 @@ with tab_team:
     with c1:
         st.markdown(
             f"<div class='team-card'><h3>Author / Project Lead</h3>"
-            f"<p><strong>{AUTHOR_NAME}</strong></p>"
+            f"<p><strong>{escape(AUTHOR_NAME)}</strong></p>"
             "<p>Leads the product concept, application design, prototype development, testing, documentation, and deployment preparation.</p></div>",
             unsafe_allow_html=True,
         )
     with c2:
         st.markdown(
             f"<div class='team-card'><h3>Mentor</h3>"
-            f"<p><strong>{MENTOR_NAME}</strong></p>"
+            f"<p><strong>{escape(MENTOR_NAME)}</strong></p>"
             "<p>Provides technical mentorship, responsible-AI guidance, software-engineering review, and project-development support.</p></div>",
             unsafe_allow_html=True,
         )
@@ -470,3 +578,13 @@ with tab_team:
         "Government scheme descriptions, myScheme materials, third-party services, and open-source libraries remain subject to their respective owners and licenses."
     )
 
+
+
+st.markdown(
+    "<footer class='adhikar-footer'><div class='adhikar-footer-content'>"
+    "<h3 style='margin:.1rem 0 .45rem;color:white;font-family:Georgia,serif'>Adhikar AI Scheme Advisor</h3>"
+    "<p style='margin:.2rem 0;line-height:1.55'>This prototype provides educational pre-screening only. It does not make an official eligibility decision. Verify every result with the responsible authority and the official myScheme portal.</p>"
+    "<p style='margin:.55rem 0 0'><a href='https://www.myscheme.gov.in/' target='_blank'>Visit myscheme.gov.in</a></p>"
+    "</div></footer>",
+    unsafe_allow_html=True,
+)

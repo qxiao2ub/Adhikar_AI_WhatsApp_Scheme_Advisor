@@ -19,7 +19,7 @@ from core_engine import UserProfile, load_default_engine, redact_sensitive_text
 
 ROOT = Path(__file__).resolve().parent
 engine = load_default_engine(ROOT)
-app = FastAPI(title="Sahayak AI WhatsApp Webhook")
+app = FastAPI(title="Adhikar AI WhatsApp Webhook")
 
 VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "change-me")
 ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN", "")

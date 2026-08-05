@@ -8,7 +8,7 @@ from core_engine import UserProfile, load_default_engine
 
 ROOT = Path(__file__).resolve().parent
 engine = load_default_engine(ROOT)
-app = FastAPI(title="Sahayak AI Mobile API", version="0.1.0")
+app = FastAPI(title="Adhikar AI Mobile API", version="0.1.0")
 
 
 class ProfileRequest(BaseModel):
@@ -32,7 +32,7 @@ class ProfileRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "sahayak-ai-mobile-api"}
+    return {"status": "ok", "service": "adhikar-ai-mobile-api"}
 
 
 @app.post("/recommend")

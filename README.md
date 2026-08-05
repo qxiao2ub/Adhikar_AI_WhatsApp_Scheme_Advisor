@@ -1,9 +1,14 @@
-# Sahayak AI Scheme Advisor
+# Adhikar AI Scheme Advisor
 
 **Author / Project Lead:** Praneel Bembey  
 **Mentor:** Dr. Qingyang Xiao
 
-A Colab-generated, GitHub-ready prototype for multilingual government-scheme discovery through a Streamlit web app, shareable WhatsApp link, optional WhatsApp Cloud API webhook, and a mobile API scaffold for a future iOS client.
+A GitHub-ready, Streamlit Cloud-compatible prototype for multilingual government-scheme discovery through a Streamlit web app, shareable WhatsApp link, optional WhatsApp Cloud API webhook, and a mobile API scaffold for a future iOS client.
+
+
+## Lovable UI integration
+
+The Streamlit interface ports the supplied Lovable **Adhikar AI** design language into the functional Python core: cream handloom-paper surfaces, deep-indigo navigation, saffron and Ashoka-green accents, rounded cards, a tricolour rule, responsive layouts, and the supplied inclusive Indian-community hero artwork. The original TypeScript/TanStack application is treated as a visual reference; the deployed application remains a single Streamlit/Python app so Streamlit Community Cloud can run it directly.
 
 ## What the prototype does
 
@@ -21,7 +26,7 @@ A Colab-generated, GitHub-ready prototype for multilingual government-scheme dis
 
 This app does **not** make an official eligibility decision. The included catalog is an educational sample and deliberately simplifies many rules. Users must verify every result on the official myScheme portal or with the responsible ministry, department, bank, hospital, or local authority.
 
-As of the project build date (2026-07-13), no documented public citizen API for arbitrary third-party myScheme eligibility integration was identified in the official public materials reviewed. Do not scrape or reverse-engineer private endpoints. Obtain written authorization or an approved data feed/API before production integration.
+As of the project build date (2026-08-04), no documented public citizen API for arbitrary third-party myScheme eligibility integration was identified in the official public materials reviewed. Do not scrape or reverse-engineer private endpoints. Obtain written authorization or an approved data feed/API before production integration.
 
 Official portal: https://www.myscheme.gov.in/
 
@@ -93,3 +98,7 @@ The demo can use browser/WAV speech recognition and an optional third-party tran
 The prototype UI and documentation identify Praneel Bembey as Author / Project Lead and Dr. Qingyang Xiao as Mentor. Replace the copyright owner placeholder with the correct legal claimant before publication. Do not claim ownership of government scheme descriptions, logos, myScheme content, BHASHINI models, third-party libraries, or map data. Keep a dependency/license inventory and preserve Git history showing authorship.
 
 See `COPYRIGHT_CHECKLIST.md`. This repository contains general information, not legal advice.
+
+## Flyer and QR assets
+
+The `marketing/` folder contains the updated **Adhikar AI Scheme Advisor** PNG flyer plus separately generated GitHub and live-app QR codes. The flyer uses the same Lovable-inspired visual system as the Streamlit interface.
