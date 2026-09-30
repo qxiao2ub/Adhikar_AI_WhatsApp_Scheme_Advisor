@@ -8,7 +8,7 @@ A GitHub-ready, Streamlit Cloud-compatible prototype for multilingual government
 
 ## Lovable UI integration
 
-The Streamlit interface ports the supplied Lovable **Adhikar AI** design language into the functional Python core: cream handloom-paper surfaces, deep-indigo navigation, saffron and Ashoka-green accents, rounded cards, a tricolour rule, responsive layouts, and the supplied inclusive Indian-community hero artwork. The original TypeScript/TanStack application is treated as a visual reference; the deployed application remains a single Streamlit/Python app so Streamlit Community Cloud can run it directly.
+The attached `adhikar-source.zip` Lovable/TanStack UI has been integrated into the functional Python core. The Streamlit interface now follows the source design more closely: warm ivory surfaces, deep-navy typography/navigation, restrained terracotta accents, editorial serif headings, compact radii, the supplied Indian-community hero artwork, and the source page hierarchy. The complete original UI source is preserved under `ui_source/adhikar/` so the repository contains the design materials as well as the Streamlit implementation.
 
 ## What the prototype does
 
@@ -21,6 +21,8 @@ The Streamlit interface ports the supplied Lovable **Adhikar AI** design languag
 - Shows commonly requested documents and links to the official myScheme portal for verification.
 - Requests browser location permission or accepts a city/district/PIN code, then searches open map data for nearby public/community services.
 - Generates text and optional voice summaries.
+- Shows a cumulative app-user/session headcount in the sidebar, fixed page badge, every functional tab, and footer.
+- Shows a cumulative app-user/session headcount in the sidebar, fixed page badge, every functional tab, and footer.
 
 ## Important limitation
 
@@ -32,7 +34,11 @@ Official portal: https://www.myscheme.gov.in/
 
 ## Project files
 
-- `streamlit_app.py` — web UI, voice/text workflow, local-language UI, location search, feedback.
+- `streamlit_app.py` — web UI, voice/text workflow, local-language UI, location search, feedback, and visible visitor count.
+- `visitor_counter.py` — no-database JSON visitor counter with optional GitHub-backed persistence.
+- `data/visitor_count.json` — flat-file counter seed.
+- `VISITOR_COUNTER_SETUP.md` — persistent counter setup and limitations.
+- `ui_source/adhikar/` — complete attached Lovable/TanStack UI materials preserved for reference and future frontend work.
 - `core_engine.py` — transparent pre-screen rules, TF-IDF retrieval, synthetic supervised ranker, need clustering, aggregate bandit.
 - `sample_schemes.csv` — illustrative discovery catalog.
 - `whatsapp_webhook.py` — direct WhatsApp Cloud API text-conversation scaffold for a separate HTTPS backend.
@@ -58,9 +64,15 @@ The generated Colab notebook includes a cell that launches Streamlit through the
 4. Add secrets in Streamlit settings instead of committing tokens.
 5. Set `APP_PUBLIC_URL` to the deployed Streamlit URL.
 6. Optionally set `APP_AUTHOR` and `APP_MENTOR`; the repository defaults are `Praneel Bembey` and `Dr. Qingyang Xiao`.
-7. Reboot the app after changing dependencies or secrets.
+7. For a visitor count that survives Streamlit container replacement without a database, configure the GitHub-backed JSON counter in `VISITOR_COUNTER_SETUP.md`.
+8. Reboot the app after changing dependencies or secrets.
 
 Streamlit Community Cloud reads the GitHub repository as the source of the deployed app. Keep `requirements.txt` in the repository root.
+
+### Cumulative user counter
+
+The project counts one visit per new Streamlit browser session and displays the count on every app area. No identity is stored. The zero-configuration mode writes to `data/visitor_count.json`; this works during the current Streamlit container lifetime. Because Streamlit Community Cloud may replace containers, strict cross-redeploy persistence requires external durable storage. To meet that requirement without a database, this repository supports a **GitHub-backed JSON file** using a fine-grained token kept only in Streamlit Secrets. See `VISITOR_COUNTER_SETUP.md`.
+
 
 ## WhatsApp deployment paths
 

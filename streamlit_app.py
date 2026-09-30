@@ -18,6 +18,7 @@ from geopy.geocoders import Nominatim
 from gtts import gTTS
 
 from core_engine import UserProfile, load_default_engine, redact_sensitive_text
+from visitor_counter import CounterSnapshot, increment_counter
 
 PROJECT_DIR = Path(__file__).resolve().parent
 AUTHOR_NAME = os.getenv("APP_AUTHOR", "Praneel Bembey")
@@ -25,6 +26,8 @@ MENTOR_NAME = os.getenv("APP_MENTOR", "Dr. Qingyang Xiao")
 APP_NAME = os.getenv("APP_NAME", "Adhikar AI Scheme Advisor")
 APP_PUBLIC_URL = os.getenv("APP_PUBLIC_URL", "https://ai-whatsapp-scheme-advisor.streamlit.app/")
 HERO_PATH = PROJECT_DIR / "assets" / "adhikar-hero.jpg"
+DASHBOARD_PATH = PROJECT_DIR / "assets" / "dashboard-demo.jpg"
+COUNTER_FILE = PROJECT_DIR / "data" / "visitor_count.json"
 
 LANGUAGES = {
     "English": {"code": "en", "locale": "en-IN"},
@@ -105,82 +108,99 @@ st.set_page_config(page_title=APP_NAME, page_icon="🇮🇳", layout="wide", ini
 st.markdown("""
 <style>
 :root {
-  --adhikar-cream: #FBF4DF;
-  --adhikar-paper: #FFFDF7;
-  --adhikar-indigo: #20305F;
-  --adhikar-indigo-soft: #2B3D73;
-  --adhikar-saffron: #E98A2B;
-  --adhikar-green: #2F855A;
-  --adhikar-border: #E4D9BD;
-  --adhikar-muted: #5F6673;
+  --adhikar-ivory: #F8F3E7;
+  --adhikar-paper: #FFFCF5;
+  --adhikar-navy: #243052;
+  --adhikar-navy-soft: #324064;
+  --adhikar-terracotta: #C87535;
+  --adhikar-saffron: #E9973E;
+  --adhikar-green: #4B745C;
+  --adhikar-border: #DED4BE;
+  --adhikar-muted: #6D7180;
+  --adhikar-soft: #F1EADC;
 }
-html, body, [class*="css"] {font-family: "Noto Sans", "Segoe UI", Arial, sans-serif;}
-.stApp {
-  background:
-    radial-gradient(circle at 8% 0%, rgba(233,138,43,.12), transparent 24rem),
-    radial-gradient(circle at 96% 8%, rgba(47,133,90,.10), transparent 22rem),
-    var(--adhikar-cream);
-  color: var(--adhikar-indigo);
+html, body, [class*="css"] {font-family: Inter, "Noto Sans", "Segoe UI", Arial, sans-serif;}
+.stApp {background: var(--adhikar-ivory); color: var(--adhikar-navy);}
+[data-testid="stHeader"] {background: rgba(248,243,231,.94); border-bottom: 1px solid var(--adhikar-border);}
+.block-container {max-width: 1180px; padding-top: 1rem; padding-bottom: 3rem;}
+
+/* Lovable-inspired editorial shell */
+.adhikar-topbar {
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.65rem 0 1rem; border-bottom:1px solid var(--adhikar-border); margin-bottom:2.3rem;
 }
-[data-testid="stHeader"] {background: rgba(251,244,223,.92); border-bottom: 1px solid rgba(32,48,95,.08);}
-.block-container {max-width: 1180px; padding-top: 1.25rem; padding-bottom: 3rem;}
-section[data-testid="stSidebar"] {
-  background: var(--adhikar-indigo);
-  border-right: 4px solid var(--adhikar-saffron);
+.adhikar-wordmark {display:flex; align-items:center; gap:.7rem; min-width:0;}
+.adhikar-mark {
+  width:34px; height:34px; position:relative; display:inline-flex; align-items:center; justify-content:center;
+  color:var(--adhikar-navy); font-family:Georgia,"Noto Serif",serif; font-size:1.55rem; font-weight:700;
 }
-section[data-testid="stSidebar"] * {color: #FFF9EC;}
-section[data-testid="stSidebar"] a {color: #FFF9EC !important;}
-section[data-testid="stSidebar"] [data-testid="stAlert"] {background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);}
-section[data-testid="stSidebar"] [data-testid="stLinkButton"] a {
-  background: var(--adhikar-saffron); color: #2C251A !important; border: none; font-weight: 800;
+.adhikar-mark:after {content:""; position:absolute; width:13px; height:2px; background:var(--adhikar-terracotta); bottom:4px; left:10px;}
+.adhikar-wordmark strong {font-family:Georgia,"Noto Serif",serif; font-size:1.35rem; font-weight:500; letter-spacing:-.01em;}
+.adhikar-top-meta {font-size:.8rem; color:var(--adhikar-muted); text-align:right;}
+
+.adhikar-home-hero {display:grid; grid-template-columns:1.05fr 1fr; gap:3.4rem; align-items:center; margin-bottom:5rem;}
+.adhikar-eyebrow {font-size:.79rem; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--adhikar-terracotta);}
+.adhikar-home-hero h1 {font-family:Georgia,"Noto Serif",serif; font-weight:400; letter-spacing:-.02em; font-size:clamp(2.65rem,5vw,4.4rem); line-height:1.04; margin:.7rem 0 1.25rem; color:var(--adhikar-navy);}
+.adhikar-home-hero .lead {font-size:1.12rem; line-height:1.75; color:var(--adhikar-muted); max-width:39rem;}
+.adhikar-app-name {display:inline-block; margin-top:1.3rem; padding:.43rem .72rem; background:var(--adhikar-soft); border:1px solid var(--adhikar-border); border-radius:8px; font-size:.86rem; font-weight:800;}
+.adhikar-hero-photo img {width:100%; aspect-ratio:16/11; object-fit:cover; object-position:center; border:1px solid var(--adhikar-border); border-radius:12px; display:block;}
+.adhikar-photo-caption {font-size:.72rem; color:var(--adhikar-muted); margin-top:.4rem;}
+
+.adhikar-section {margin:4.8rem 0 0; max-width:900px;}
+.adhikar-section h2 {font-family:Georgia,"Noto Serif",serif; font-weight:400; font-size:clamp(2rem,3vw,2.55rem); line-height:1.12; margin:.55rem 0 .8rem; color:var(--adhikar-navy);}
+.adhikar-section p {font-size:1.04rem; line-height:1.75; color:var(--adhikar-muted);}
+.adhikar-steps {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2rem; margin:2.2rem 0 4.5rem;}
+.adhikar-step {border-top:1px solid var(--adhikar-border); padding-top:1.1rem;}
+.adhikar-step .num {font-family:Georgia,"Noto Serif",serif; font-size:1.7rem; color:var(--adhikar-terracotta);}
+.adhikar-step h3 {font-size:1.05rem; margin:.2rem 0 .45rem; color:var(--adhikar-navy);}
+.adhikar-step p {font-size:.92rem; line-height:1.6; color:var(--adhikar-muted); margin:0;}
+
+/* Counter is always visible and repeated inside every tab credit strip. */
+.visitor-fixed {
+  position:fixed; top:4.25rem; right:1rem; z-index:999;
+  display:flex; align-items:center; gap:.55rem; padding:.55rem .75rem;
+  border:1px solid var(--adhikar-border); border-radius:999px; background:rgba(255,252,245,.96);
+  box-shadow:0 6px 18px rgba(36,48,82,.08); color:var(--adhikar-navy); font-size:.78rem; font-weight:700;
 }
-.adhikar-sidebar-brand {text-align:center; padding:.2rem .25rem .8rem;}
-.adhikar-sidebar-logo {
-  width:64px; height:64px; margin:0 auto .65rem; border-radius:50%; background:var(--adhikar-saffron);
-  color:#2C251A; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900;
-  box-shadow:0 0 0 5px rgba(233,138,43,.18);
-}
-.adhikar-sidebar-brand h2 {font-family: Georgia, serif; font-size:1.55rem; margin:.2rem 0; color:white;}
-.adhikar-sidebar-brand p {font-size:.82rem; opacity:.78; margin:0;}
-.adhikar-hero {
-  overflow:hidden; border-radius:28px; border:2px solid rgba(233,138,43,.42); background:var(--adhikar-paper);
-  box-shadow:0 18px 45px rgba(32,48,95,.10); margin-bottom:1.2rem;
-}
-.adhikar-hero-image {height:330px; background-size:cover; background-position:center 45%; position:relative;}
-.adhikar-hero-image:after {
-  content:""; position:absolute; inset:auto 0 0 0; height:42%;
-  background:linear-gradient(180deg,transparent,rgba(18,29,63,.55));
-}
-.tiranga-rule {height:6px; background:linear-gradient(90deg,var(--adhikar-saffron) 0 33.33%,#fff 33.33% 66.66%,var(--adhikar-green) 66.66% 100%);}
-.adhikar-hero-copy {padding:2rem 2.2rem 2.25rem; position:relative;}
-.adhikar-badge {display:inline-block; padding:.45rem .8rem; border-radius:999px; background:#F7D6A9; color:#4C3016; font-weight:800; font-size:.86rem;}
-.adhikar-hero h1 {font-family:Georgia,"Noto Serif",serif; font-size:clamp(2.4rem,5vw,4.25rem); line-height:1.02; margin:.85rem 0 .7rem; color:var(--adhikar-indigo);}
-.adhikar-hero .tagline {font-size:1.2rem; line-height:1.65; max-width:850px; color:#4D5668;}
-.credit-line {margin:.9rem 0 0; font-size:1rem; color:#273451; line-height:1.7;}
-.vision-grid {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1.1rem 0 1.6rem;}
-.vision-card {background:rgba(255,253,247,.94); border:1px solid var(--adhikar-border); border-radius:20px; padding:1.15rem; box-shadow:0 8px 20px rgba(32,48,95,.05);}
-.vision-icon {width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F5C98F;color:#2C251A;font-weight:900;font-size:1.2rem;}
-.vision-card h3 {font-family:Georgia,serif;margin:.75rem 0 .3rem;color:var(--adhikar-indigo);font-size:1.25rem;}
-.vision-card p {margin:0;color:var(--adhikar-muted);font-size:.92rem;line-height:1.55;}
-.credit-strip {padding:.72rem 1rem; margin:0 0 1rem; border-radius:14px; background:#FFF8E8; border:1px solid #EAD7A9; color:#263746;}
-.team-card {padding:1.1rem 1.2rem; border:1px solid var(--adhikar-border); border-radius:18px; background:var(--adhikar-paper); margin-bottom:1rem; box-shadow:0 8px 20px rgba(32,48,95,.05);}
-[data-baseweb="tab-list"] {gap:.4rem; background:rgba(255,253,247,.72); border-radius:18px; padding:.35rem; border:1px solid var(--adhikar-border);}
-[data-baseweb="tab"] {border-radius:13px; padding:.6rem .85rem;}
-[aria-selected="true"][data-baseweb="tab"] {background:var(--adhikar-indigo); color:white;}
-[data-testid="stForm"] {background:rgba(255,253,247,.9); border:1px solid var(--adhikar-border); border-radius:22px; padding:1.15rem;}
-[data-testid="stVerticalBlockBorderWrapper"] {background:rgba(255,253,247,.94); border-color:var(--adhikar-border) !important; border-radius:20px; box-shadow:0 9px 24px rgba(32,48,95,.05);}
-.stButton>button[kind="primary"], .stFormSubmitButton>button {background:var(--adhikar-indigo); border:none; border-radius:999px; font-weight:800;}
-.stButton>button[kind="primary"]:hover, .stFormSubmitButton>button:hover {background:var(--adhikar-indigo-soft);}
-.stLinkButton>a {border-radius:999px; font-weight:700;}
-.adhikar-footer {margin-top:2.2rem; padding:1.5rem 1.7rem; border-radius:22px; background:var(--adhikar-indigo); color:#FFF9EC; position:relative; overflow:hidden;}
-.adhikar-footer:before {content:""; position:absolute; inset:0; opacity:.08; background-image:radial-gradient(#F5B45C 1.1px,transparent 1.2px); background-size:24px 24px;}
-.adhikar-footer-content {position:relative;}
-.adhikar-footer a {color:#FFD79B !important; font-weight:800;}
-@media (max-width: 760px) {
-  .adhikar-hero-image {height:220px;}
-  .adhikar-hero-copy {padding:1.35rem;}
-  .vision-grid {grid-template-columns:1fr;}
-  .block-container {padding-left:.75rem; padding-right:.75rem;}
+.visitor-dot {width:8px;height:8px;border-radius:50%;background:var(--adhikar-green);box-shadow:0 0 0 4px rgba(75,116,92,.13);}
+.visitor-fixed strong {font-size:.92rem;}
+.visitor-card {border:1px solid rgba(255,255,255,.18); border-radius:10px; padding:.7rem .75rem; margin:.7rem 0; background:rgba(255,255,255,.08); text-align:center;}
+.visitor-card .count {font-family:Georgia,"Noto Serif",serif; font-size:1.65rem; color:#FFF8E8; line-height:1;}
+.visitor-card .label {font-size:.72rem; opacity:.82; margin-top:.32rem;}
+
+section[data-testid="stSidebar"] {background:var(--adhikar-navy); border-right:3px solid var(--adhikar-terracotta);}
+section[data-testid="stSidebar"] * {color:#FFF9EC;}
+section[data-testid="stSidebar"] a {color:#FFF9EC !important;}
+section[data-testid="stSidebar"] [data-testid="stAlert"] {background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);}
+section[data-testid="stSidebar"] [data-testid="stLinkButton"] a {background:var(--adhikar-terracotta);color:white !important;border:none;font-weight:800;}
+.adhikar-sidebar-brand {text-align:center; padding:.2rem .25rem .6rem;}
+.adhikar-sidebar-logo {width:54px;height:54px;margin:0 auto .55rem;border:1px solid rgba(255,255,255,.35);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:1.7rem;color:#FFF9EC;position:relative;}
+.adhikar-sidebar-logo:after {content:"";position:absolute;width:15px;height:2px;background:var(--adhikar-saffron);bottom:9px;}
+.adhikar-sidebar-brand h2 {font-family:Georgia,serif;font-size:1.35rem;margin:.15rem 0;color:white;font-weight:500;}
+.adhikar-sidebar-brand p {font-size:.79rem;opacity:.75;margin:0;}
+
+.credit-strip {display:flex;flex-wrap:wrap;gap:.45rem 1rem;align-items:center;padding:.68rem .85rem;margin:.05rem 0 1rem;border-radius:8px;background:var(--adhikar-paper);border:1px solid var(--adhikar-border);color:#31405E;font-size:.86rem;}
+.credit-strip .users {margin-left:auto;font-weight:800;color:var(--adhikar-green);}
+.team-card {padding:1.1rem 1.2rem;border:1px solid var(--adhikar-border);border-radius:10px;background:var(--adhikar-paper);margin-bottom:1rem;}
+[data-baseweb="tab-list"] {gap:.25rem;background:var(--adhikar-paper);border-radius:10px;padding:.28rem;border:1px solid var(--adhikar-border);}
+[data-baseweb="tab"] {border-radius:7px;padding:.58rem .8rem;}
+[aria-selected="true"][data-baseweb="tab"] {background:var(--adhikar-navy);color:white;}
+[data-testid="stForm"] {background:var(--adhikar-paper);border:1px solid var(--adhikar-border);border-radius:10px;padding:1rem;}
+[data-testid="stVerticalBlockBorderWrapper"] {background:var(--adhikar-paper);border-color:var(--adhikar-border)!important;border-radius:10px;box-shadow:none;}
+.stButton>button[kind="primary"], .stFormSubmitButton>button {background:var(--adhikar-navy);border:none;border-radius:8px;font-weight:800;}
+.stButton>button[kind="primary"]:hover, .stFormSubmitButton>button:hover {background:var(--adhikar-navy-soft);}
+.stLinkButton>a {border-radius:8px;font-weight:700;}
+.adhikar-footer {margin-top:3rem;padding:1.35rem 1.5rem;border-top:1px solid var(--adhikar-border);background:transparent;color:var(--adhikar-muted);}
+.adhikar-footer h3 {color:var(--adhikar-navy)!important;}
+.adhikar-footer a {color:var(--adhikar-navy)!important;font-weight:800;}
+
+@media (max-width: 850px) {
+  .adhikar-home-hero {grid-template-columns:1fr;gap:1.7rem;margin-bottom:3.2rem;}
+  .adhikar-home-hero h1 {font-size:2.65rem;}
+  .adhikar-steps {grid-template-columns:1fr;gap:1.25rem;margin-bottom:3rem;}
+  .visitor-fixed {top:auto;bottom:.8rem;right:.7rem;}
+  .adhikar-top-meta {display:none;}
+  .block-container {padding-left:.8rem;padding-right:.8rem;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -194,18 +214,45 @@ def image_data_uri(path: Path) -> str:
         return ""
 
 
+def app_setting(name: str, default: str = "") -> str:
+    """Read a Streamlit secret when available, then fall back to an environment variable."""
+    try:
+        value = st.secrets.get(name, None)
+        if value is not None:
+            return str(value)
+    except Exception:
+        pass
+    return str(os.getenv(name, default))
+
+
+def get_or_increment_visitor_count() -> CounterSnapshot:
+    """Count one visit per Streamlit browser session, without storing a user identity."""
+    if "visitor_counter_snapshot" not in st.session_state:
+        snapshot = increment_counter(
+            counter_file=COUNTER_FILE,
+            github_token=app_setting("GITHUB_COUNTER_TOKEN"),
+            github_repo=app_setting("GITHUB_COUNTER_REPO", "qxiao2ub/AI_WhatsApp_Scheme_Advisor"),
+            github_path=app_setting("GITHUB_COUNTER_PATH", "data/visitor_count.json"),
+            github_branch=app_setting("GITHUB_COUNTER_BRANCH", "main"),
+        )
+        st.session_state["visitor_counter_snapshot"] = snapshot
+    return st.session_state["visitor_counter_snapshot"]
+
+
 @st.cache_resource
 def get_engine():
     return load_default_engine(PROJECT_DIR)
 
 engine = get_engine()
+VISITOR_COUNTER = get_or_increment_visitor_count()
 
 
 def render_project_credit() -> None:
-    """Show consistent author and mentor attribution inside each main tab."""
+    """Show attribution and the cumulative app-user count inside every main tab/page."""
     st.markdown(
-        f"<div class='credit-strip'><strong>Author / Project Lead:</strong> {escape(AUTHOR_NAME)}"
-        f" &nbsp; | &nbsp; <strong>Mentor:</strong> {escape(MENTOR_NAME)}</div>",
+        f"<div class='credit-strip'><span><strong>Author / Project Lead:</strong> {escape(AUTHOR_NAME)}</span>"
+        f"<span><strong>Mentor:</strong> {escape(MENTOR_NAME)}</span>"
+        f"<span class='users'>● Cumulative app users: {VISITOR_COUNTER.value:,}</span></div>",
         unsafe_allow_html=True,
     )
 
@@ -308,8 +355,13 @@ with st.sidebar:
         "<div class='adhikar-sidebar-brand'>"
         "<div class='adhikar-sidebar-logo'>A</div>"
         "<h2>Adhikar AI</h2>"
-        "<p>Multilingual government-scheme discovery</p>"
+        "<p>Government support, made easier to find</p>"
         "</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<div class='visitor-card'><div class='count'>{VISITOR_COUNTER.value:,}</div>"
+        "<div class='label'>CUMULATIVE APP USERS</div></div>",
         unsafe_allow_html=True,
     )
     st.markdown(f"**Author / Project Lead:** {escape(AUTHOR_NAME)}")
@@ -320,38 +372,54 @@ with st.sidebar:
     st.link_button("Share app link on WhatsApp", share_url, use_container_width=True)
     st.link_button("Open official myScheme", "https://www.myscheme.gov.in/", use_container_width=True)
 
-hero_uri = image_data_uri(HERO_PATH)
-hero_style = f"background-image:url('{hero_uri}')" if hero_uri else "background:linear-gradient(135deg,#F7D6A9,#D7E8D6)"
+# A fixed badge keeps the cumulative count visible regardless of the selected tab.
 st.markdown(
-    f"<section class='adhikar-hero'>"
-    f"<div class='tiranga-rule'></div>"
-    f"<div class='adhikar-hero-image' style=\"{hero_style}\"></div>"
-    f"<div class='adhikar-hero-copy'>"
-    f"<span class='adhikar-badge'>13 Indian languages · voice and text supported</span>"
-    f"<h1>{escape(APP_NAME)}</h1>"
-    "<p class='tagline'><strong>Know your rights. Discover the schemes meant for you.</strong> "
-    "Describe your needs in your preferred language and receive transparent potential matches, document guidance, official verification links, and nearby-service support.</p>"
-    f"<p class='credit-line'><strong>Author / Project Lead:</strong> {escape(AUTHOR_NAME)}<br>"
-    f"<strong>Mentor:</strong> {escape(MENTOR_NAME)}</p>"
-    f"</div><div class='tiranga-rule'></div></section>",
+    f"<div class='visitor-fixed'><span class='visitor-dot'></span>"
+    f"Cumulative app users <strong>{VISITOR_COUNTER.value:,}</strong></div>",
+    unsafe_allow_html=True,
+)
+
+hero_uri = image_data_uri(HERO_PATH)
+hero_html = (
+    f"<img src='{hero_uri}' alt='Community members in India meeting together'>"
+    if hero_uri else
+    "<div style='aspect-ratio:16/11;background:#EDE3CF;border:1px solid #DED4BE;border-radius:12px'></div>"
+)
+
+st.markdown(
+    f"<div class='adhikar-topbar'>"
+    f"<div class='adhikar-wordmark'><span class='adhikar-mark'>A</span><strong>Adhikar</strong></div>"
+    f"<div class='adhikar-top-meta'>Private · multilingual · transparent pre-screening<br>"
+    f"Author: {escape(AUTHOR_NAME)} · Mentor: {escape(MENTOR_NAME)}</div>"
+    f"</div>"
+    f"<section class='adhikar-home-hero'>"
+    f"<div><div class='adhikar-eyebrow'>13 Indian languages · voice supported</div>"
+    f"<h1>Find government support that may be right for you.</h1>"
+    f"<p class='lead'>Answer a few optional questions, describe your needs in your own language, and discover government schemes worth checking. Adhikar explains why each result appeared, what documents may be needed, and where to verify the official rules.</p>"
+    f"<span class='adhikar-app-name'>{escape(APP_NAME)}</span></div>"
+    f"<figure class='adhikar-hero-photo'>{hero_html}<figcaption class='adhikar-photo-caption'>UI adapted from the attached Adhikar Lovable design source.</figcaption></figure>"
+    f"</section>",
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    "<div class='vision-grid'>"
-    "<div class='vision-card'><div class='vision-icon'>भ</div><h3>Speak your language</h3><p>Use text or a short voice message in major Indian languages. The language layer helps normalize the request for matching.</p></div>"
-    "<div class='vision-card'><div class='vision-icon'>✓</div><h3>Transparent pre-screening</h3><p>See why a scheme appeared, what still needs confirmation, and where to verify the official rules.</p></div>"
-    "<div class='vision-card'><div class='vision-icon'>⌖</div><h3>Documents and nearby help</h3><p>Review commonly requested documents and search for government, health, and community service locations.</p></div>"
+    "<section class='adhikar-section'><div class='adhikar-eyebrow'>Why Adhikar</div>"
+    "<h2>Government support should not be hard to find.</h2>"
+    "<p>Welfare information can be scattered across websites, languages, eligibility rules and application procedures. This prototype brings discovery, explanation and official verification links into one simpler workflow.</p></section>"
+    "<div class='adhikar-steps'>"
+    "<div class='adhikar-step'><div class='num'>01</div><h3>Tell us about yourself</h3><p>Answer only the optional questions relevant to your situation and describe the support you need.</p></div>"
+    "<div class='adhikar-step'><div class='num'>02</div><h3>Discover relevant schemes</h3><p>Transparent rules and ML relevance ranking surface schemes that may be worth checking.</p></div>"
+    "<div class='adhikar-step'><div class='num'>03</div><h3>Understand your options</h3><p>Review benefits, documents, possible mismatches, nearby help and official verification links.</p></div>"
     "</div>",
     unsafe_allow_html=True,
 )
 
 tab_advisor, tab_nearby, tab_ai, tab_deploy, tab_team = st.tabs([
-    "💬 Adhikar advisor",
-    "📍 Nearby services",
-    "🧠 Responsible AI",
-    "🚀 WhatsApp & deployment",
-    "👥 Project team",
+    "Find schemes",
+    "Nearby help",
+    "How the AI works",
+    "WhatsApp & deployment",
+    "Project team",
 ])
 
 with tab_advisor:
@@ -584,7 +652,7 @@ st.markdown(
     "<footer class='adhikar-footer'><div class='adhikar-footer-content'>"
     "<h3 style='margin:.1rem 0 .45rem;color:white;font-family:Georgia,serif'>Adhikar AI Scheme Advisor</h3>"
     "<p style='margin:.2rem 0;line-height:1.55'>This prototype provides educational pre-screening only. It does not make an official eligibility decision. Verify every result with the responsible authority and the official myScheme portal.</p>"
-    "<p style='margin:.55rem 0 0'><a href='https://www.myscheme.gov.in/' target='_blank'>Visit myscheme.gov.in</a></p>"
+    f"<p style='margin:.55rem 0 0'><strong>Cumulative app users:</strong> {VISITOR_COUNTER.value:,} &nbsp; · &nbsp; <a href='https://www.myscheme.gov.in/' target='_blank'>Visit myscheme.gov.in</a></p>"
     "</div></footer>",
     unsafe_allow_html=True,
 )
