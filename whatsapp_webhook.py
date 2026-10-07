@@ -16,10 +16,12 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import PlainTextResponse
 
 from core_engine import UserProfile, load_default_engine, redact_sensitive_text
+from backend import BackendStore
 
 ROOT = Path(__file__).resolve().parent
-engine = load_default_engine(ROOT)
-app = FastAPI(title="Adhikar AI WhatsApp Webhook")
+store = BackendStore(ROOT, database_url=os.getenv("DATABASE_URL", ""))
+engine = load_default_engine(ROOT, catalog_df=store.scheme_dataframe(active_only=True))
+app = FastAPI(title="Adhikaar.ai WhatsApp Webhook")
 
 VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "change-me")
 ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN", "")

@@ -32,7 +32,7 @@ def _payload(count: int) -> dict[str, Any]:
     return {
         "count": max(0, int(count)),
         "updated_at": datetime.now(timezone.utc).isoformat(),
-        "note": "Adhikar AI cumulative visitor counter. No user identity is stored.",
+        "note": "Adhikaar.ai cumulative visitor counter. No user identity is stored.",
     }
 
 
@@ -91,7 +91,7 @@ def increment_github_counter(
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "Adhikar-AI-Visitor-Counter",
+        "User-Agent": "Adhikaar-ai-Visitor-Counter",
     }
 
     last_error = ""
@@ -115,7 +115,7 @@ def increment_github_counter(
         updated = current + 1
         encoded = base64.b64encode(json.dumps(_payload(updated), indent=2).encode("utf-8")).decode("ascii")
         body: dict[str, Any] = {
-            "message": "chore: increment Adhikar AI visitor count",
+            "message": "chore: increment Adhikaar.ai visitor count",
             "content": encoded,
             "branch": branch,
         }

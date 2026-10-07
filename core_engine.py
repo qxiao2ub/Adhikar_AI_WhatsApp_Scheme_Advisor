@@ -106,11 +106,27 @@ class SchemeRecommender:
     are shown first.
     """
 
-    def __init__(self, catalog_path: str | Path, bandit_path: str | Path | None = None):
-        self.catalog_path = Path(catalog_path)
-        self.df = pd.read_csv(self.catalog_path).fillna("")
+    def __init__(
+        self,
+        catalog_path: str | Path | None = None,
+        bandit_path: str | Path | None = None,
+        catalog_df: pd.DataFrame | None = None,
+    ):
+        if catalog_df is not None:
+            self.catalog_path = Path(catalog_path) if catalog_path else Path("sample_schemes.csv")
+            self.df = catalog_df.copy().fillna("")
+        elif catalog_path is not None:
+            self.catalog_path = Path(catalog_path)
+            self.df = pd.read_csv(self.catalog_path).fillna("")
+        else:
+            raise ValueError("catalog_path or catalog_df is required")
         if self.df.empty:
             raise ValueError("Scheme catalog is empty")
+        # Admin-managed catalogs may add fields over time. Keep ranking compatible.
+        required_text_cols = ["name", "category", "occupation_keywords", "need_keywords", "benefits"]
+        for col in required_text_cols:
+            if col not in self.df.columns:
+                self.df[col] = ""
         self.bandit = BanditStore(bandit_path or self.catalog_path.with_name("bandit_state.json"))
         self._fit_text_model()
         self._fit_demo_supervised_ranker()
@@ -323,6 +339,9 @@ class SchemeRecommender:
                 "verification_note": str(scheme["verification_note"]),
                 "official_url": str(scheme.get("official_url") or MYScheme_HOME),
                 "application_url": str(scheme.get("application_url") or MYScheme_HOME),
+                "application_steps": _split(scheme.get("application_steps", "")),
+                "official_source": str(scheme.get("official_source") or scheme.get("official_url") or MYScheme_HOME),
+                "last_verified": str(scheme.get("last_verified") or ""),
                 "official_search_hint": official_search_hint,
                 "share_text": quote_plus(
                     f"Potential scheme to verify: {scheme['name']}. Open official myScheme: {MYScheme_HOME}"
@@ -337,9 +356,13 @@ class SchemeRecommender:
         self.bandit.update(scheme_id, helpful)
 
 
-def load_default_engine(project_dir: str | Path = ".") -> SchemeRecommender:
+def load_default_engine(
+    project_dir: str | Path = ".",
+    catalog_df: pd.DataFrame | None = None,
+) -> SchemeRecommender:
     project_dir = Path(project_dir)
     return SchemeRecommender(
         project_dir / "sample_schemes.csv",
         project_dir / "bandit_state.json",
+        catalog_df=catalog_df,
     )

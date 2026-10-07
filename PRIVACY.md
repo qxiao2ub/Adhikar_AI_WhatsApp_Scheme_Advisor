@@ -1,36 +1,71 @@
-# Prototype Privacy Notice and Production Checklist
+# Adhikaar.ai privacy design
 
-## Prototype behavior
+## Consent model
 
-The prototype processes information in the active Streamlit session to generate potential scheme matches. It is designed not to intentionally persist raw audio, exact browser coordinates, Aadhaar numbers, OTPs, passwords, bank credentials, or medical records.
+The prototype separates two purposes:
 
-The aggregate `bandit_state.json` stores only positive and negative feedback counts by scheme ID. It does not store user identifiers or profiles.
+1. **Session processing** — required to use the profile answers, text/voice transcript and matching engine for the current interaction.
+2. **Impact analytics** — optional. When enabled, Adhikaar.ai stores a privacy-minimized pseudonymous profile and journey events for impact measurement.
 
-## Information the user may choose to provide
+A separate consent is required to store a human-help ticket.
 
-- Age and approximate annual household income
-- Gender, marital status, broad residence type, and State/UT
-- Optional scheme-specific conditions such as student, pregnancy, disability, occupation, or housing need
-- A typed or spoken description of the requested support
-- Current coordinates or a place name for a one-time nearby-service search
+## What impact analytics stores
 
-## External processing
+- random pseudonymous browser-session ID
+- language
+- State/UT if provided
+- urban/rural residence category
+- age band, not exact age
+- income band, not exact income
+- broad need category
+- limited non-sensitive profile flags
+- schemes matched
+- journey events such as application started/completed
+- consent version and timestamp
 
-Speech recognition, translation, text-to-speech, geocoding, map search, WhatsApp, and hosting providers may receive data when those features are enabled. The production privacy notice must name each provider, purpose, data category, retention period, location of processing, and deletion route.
+## What is intentionally excluded from the impact database
 
-## Required production controls
+- name
+- phone number
+- email address
+- Aadhaar number
+- passwords or OTPs
+- full street address
+- raw voice recording
+- precise latitude/longitude
+- free-form transcript
+- social-category selection
+- pregnancy/disability status
+- full medical records
 
-1. Collect only fields necessary for a selected scheme question.
-2. Use layered consent in the user’s language.
-3. Provide a clear deletion and consent-withdrawal mechanism.
-4. Encrypt data in transit and at rest; rotate keys and tokens.
-5. Separate identity/session data from recommendation data.
-6. Use expiring sessions and short retention by default.
-7. Restrict employee access and maintain audit logs.
-8. Perform security, privacy, language-quality, accessibility, and bias testing.
-9. Establish child-user safeguards and parental/guardian consent where legally required.
-10. Never infer caste, religion, disability, health status, or income from voice, name, accent, or location.
-11. Never request Aadhaar, OTP, bank password, or full medical records in chat.
-12. Publish incident-response and grievance-contact information.
+Sensitive values may be used transiently in the current session when a scheme rule genuinely requires them, but the analytics backend is designed not to persist them.
 
-This document is a project checklist, not legal advice. Obtain qualified Indian privacy and platform counsel before launch.
+## Retention and deletion
+
+`DATA_RETENTION_DAYS` controls the analytics retention window. `backend.py` can purge expired beneficiary profiles and related records. The Privacy Center also lets a user delete analytics linked to the current pseudonymous browser-session ID.
+
+## Aggregation privacy
+
+Geography and language breakdowns are suppressed until at least three consented profiles occur in a group. Production deployments should consider stronger statistical disclosure controls where required.
+
+## External services
+
+Speech recognition, translation, text-to-speech, geocoding, map search, WhatsApp, hosting and database providers can receive data when their features are enabled. A production privacy notice must name the actual providers, purposes, data categories, retention periods and deletion/grievance route.
+
+## Production controls still required
+
+- professional privacy/legal review for the intended jurisdiction and beneficiaries
+- TLS for every network connection and encryption at rest
+- managed secrets and key rotation
+- SSO/MFA and role-based access control for staff/admins
+- audit logs for administrative changes and data access
+- database backups and tested recovery
+- vulnerability management and dependency scanning
+- rate limiting, abuse prevention and monitoring
+- incident-response and grievance workflows
+- child-user safeguards where applicable
+- accessibility and language-quality testing
+- data-processing/vendor agreements as required
+- documented lawful basis and retention schedule for every production data category
+
+This file is an engineering privacy checklist, not legal advice.

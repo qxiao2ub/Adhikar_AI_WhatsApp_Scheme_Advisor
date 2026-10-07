@@ -1,38 +1,73 @@
-# Architecture
+# Adhikaar.ai architecture
 
 ```text
-WhatsApp shared link / Web browser / Future SwiftUI client
-                         |
-                  Consent and locale
-                         |
-        Voice input -> ASR -> language/translation adapter
-                         |
-             Structured profile + stated need
-                         |
-       Approved scheme catalog + transparent rule engine
-                         |
-    Candidate set -> supervised relevance ranker -> display
-                         |
-  Local-language text/TTS + documents + official verification
-                         |
-  Optional aggregate helpful/not-helpful bandit (no identity)
-
-New Streamlit session
-        |
-visitor_counter.py
-        |
-GitHub JSON file (recommended) OR local JSON fallback
-        |
-Visible cumulative count on every app area
+Citizen: web / WhatsApp link / future mobile client
+                    |
+       Session-processing consent
+                    |
+        text or voice + language
+                    |
+  transient profile + stated need in session
+                    |
+             core_engine.py
+        / rules + relevance ML \
+       /                       \
+admin-managed catalog       need clustering
+       |                       |
+       +------ potential scheme matches ------+
+                    |
+  documents + application steps + official links
+                    |
+      start / self-report completion
+                    |
+      optional impact-analytics consent
+                    |
+                 backend.py
+       SQLite demo OR PostgreSQL production
+                    |
+  beneficiaries / consents / matches / journey events
+  help tickets / scheme catalog / aggregate metrics
+                    |
+       impact dashboard + admin operations
 ```
 
-## Production separation
+## Runtime components
 
-- Web UI: Streamlit or a production frontend.
-- Preserved UI source: `ui_source/adhikar/` contains the attached Lovable/TanStack design materials and is not required by Streamlit at runtime.
-- API: FastAPI behind authentication, rate limits, monitoring, and a web-application firewall.
-- WhatsApp webhook: separate public HTTPS service.
-- Catalog pipeline: versioned ingest, validation, legal approval, provenance, and change monitoring.
-- Language services: approved ASR/translation/TTS provider or audited self-hosted models.
-- Visitor count: anonymous app-session count only; GitHub-backed JSON is the no-database durable option.
-- Analytics: de-identified, consented, minimum necessary, with retention limits.
+### Streamlit citizen experience
+
+`streamlit_app.py` provides personalized discovery, accessibility controls, nearby help, impact metrics, privacy controls, human assistance and the admin interface.
+
+### Recommendation engine
+
+`core_engine.py` separates transparent pre-screen rules from ML ranking. ML ranking does not create official eligibility.
+
+### Backend
+
+`backend.py` uses SQLAlchemy. SQLite provides a no-configuration launch path; a managed PostgreSQL `DATABASE_URL` is recommended for durable Streamlit Cloud persistence.
+
+### Scheme catalog
+
+The backend `schemes` table is the runtime source of truth. The bundled CSV is used only to seed an empty database. Admin updates can change eligibility metadata, documents, application steps, sources, last-verified date and active/inactive status.
+
+### Privacy-minimized analytics
+
+Opt-in analytics store coarse information only. Direct identifiers, raw audio, precise coordinates and free-form transcripts are excluded from the impact database by design.
+
+### Visitor counter
+
+The legacy cumulative app-user counter remains independent from beneficiary analytics. A GitHub-backed JSON option may be used for the non-identifying count only.
+
+### Human assistance
+
+A help-ticket queue stores redacted issue descriptions after separate consent. Production should route these tickets to an authenticated case-management/helpdesk system.
+
+## Production separation recommended
+
+- **Web UI:** Streamlit prototype or a hardened production frontend.
+- **API/backend:** private FastAPI/service layer behind authentication, authorization, rate limiting and monitoring.
+- **Database:** managed PostgreSQL with TLS, backups, encryption at rest and restricted network/access policy.
+- **WhatsApp webhook:** separate public HTTPS service with signature/token validation and short-lived state.
+- **Admin:** organization SSO/MFA + role-based authorization, not a shared password.
+- **Scheme ingest:** authorized official data feed, provenance, validation, versioning and review workflow.
+- **Language services:** approved ASR/translation/TTS or audited self-hosted models.
+- **Human support:** authenticated helpdesk with defined service levels and grievance/escalation process.

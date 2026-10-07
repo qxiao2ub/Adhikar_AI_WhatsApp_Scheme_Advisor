@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -5,10 +6,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from core_engine import UserProfile, load_default_engine
+from backend import BackendStore
 
 ROOT = Path(__file__).resolve().parent
-engine = load_default_engine(ROOT)
-app = FastAPI(title="Adhikar AI Mobile API", version="0.1.0")
+store = BackendStore(ROOT, database_url=os.getenv("DATABASE_URL", ""))
+engine = load_default_engine(ROOT, catalog_df=store.scheme_dataframe(active_only=True))
+app = FastAPI(title="Adhikaar.ai Mobile API", version="0.2.0")
 
 
 class ProfileRequest(BaseModel):
